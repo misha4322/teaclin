@@ -146,7 +146,7 @@ const HomePage = () => {
                         return (
                             <div key={product.id} className={styles.productCard}>
                                 <img
-                                    src={`/img/${product.image_url}`}
+                                    src={`/img/${product.image_url.replace('chay', 'chay')}`}
                                     alt={product.title}
                                     className={styles.productImage}
                                 />
