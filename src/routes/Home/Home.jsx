@@ -79,11 +79,17 @@ const HomePage = () => {
         if (!checkAuth()) return;
         dispatch(toggleFavorite(product.id)); 
     };
-    useEffect(() => {
-          console.log("Products in store:", products);
-          console.log("Products status:", status);
-          console.log("Current products status:", productsStatus);
-     if (productsStatus === 'idle') {
+useEffect(() => {
+  console.log("Products in store:", products);
+  console.log("Products status:", productsStatus);
+  
+  // Добавьте вывод ошибки, если она есть
+  const productsError = useSelector(state => state.products.error);
+  if (productsError) {
+    console.error("Products error:", productsError);
+  }
+
+  if (productsStatus === 'idle') {
     console.log("Dispatching fetchProducts...");
     dispatch(fetchProducts());
   }
