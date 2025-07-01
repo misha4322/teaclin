@@ -3,26 +3,9 @@ import axios from 'axios';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (_, { rejectWithValue }) => {
-    try {
-      console.log("Fetching products from API...");
-      const response = await axios.get('https://tea-server-production.up.railway.app/api/products');
-      console.log("Products response:", response);
-      return response.data;
-    } catch (error) {
-      console.error("Products fetch error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config
-      });
-      
-      return rejectWithValue({
-        message: 'Ошибка загрузки продуктов',
-        details: error.response?.data || error.message,
-        status: error.response?.status
-      });
-    }
+  async () => {
+    const response = await axios.get('https://tea-server-production.up.railway.app/api/products');
+    return response.data;
   }
 );
 
@@ -38,7 +21,6 @@ const productsSlice = createSlice({
     builder
       .addCase(fetchProducts.pending, (state) => {
         state.status = 'loading';
-        state.error = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.status = 'succeeded';
@@ -46,7 +28,7 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload || 'Unknown error';
+        state.error = action.error.message;
       });
   },
 });
