@@ -62,10 +62,7 @@ const HomePage = () => {
       return state.products.error;
     });
 
-    console.log('[HomePage] Component render');
-    console.log('Products status:', productsStatus);
-    console.log('Products count:', products.length);
-    console.log('Products error:', productsError);
+
 
     const handleCatalogClick = () => {
         catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
