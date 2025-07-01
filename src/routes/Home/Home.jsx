@@ -82,10 +82,12 @@ const HomePage = () => {
     useEffect(() => {
           console.log("Products in store:", products);
           console.log("Products status:", status);
-        if (productsStatus === 'idle') {
-            dispatch(fetchProducts());
-        }
-    }, [productsStatus, dispatch]);
+          console.log("Current products status:", productsStatus);
+     if (productsStatus === 'idle') {
+    console.log("Dispatching fetchProducts...");
+    dispatch(fetchProducts());
+  }
+}, [productsStatus, dispatch]);
 
     return (
         <div className={styles.container}>
