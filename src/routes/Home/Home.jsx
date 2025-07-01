@@ -35,12 +35,37 @@ const HomePage = () => {
     const navigate = useNavigate();
     const catalogRef = useRef(null);
 
+    // Селекторы с логированием
+    const { isAuthenticated } = useSelector(state => {
+      console.log('[HomePage] Selecting auth state');
+      return state.auth;
+    });
+    
+    const favorites = useSelector(state => {
+      console.log('[HomePage] Selecting favorites state');
+      return state.favorites.items;
+    });
+    
+    const products = useSelector(state => {
+      console.log('[HomePage] Selecting products state');
+      console.log('Current products:', state.products.items);
+      return state.products.items;
+    });
+    
+    const productsStatus = useSelector(state => {
+      console.log('[HomePage] Selecting products status');
+      return state.products.status;
+    });
+    
+    const productsError = useSelector(state => {
+      console.log('[HomePage] Selecting products error');
+      return state.products.error;
+    });
 
-    const { isAuthenticated } = useSelector(state => state.auth);
-    const favorites = useSelector(state => state.favorites.items);
-    const products = useSelector(state => state.products.items);
-    const productsStatus = useSelector(state => state.products.status);
-
+    console.log('[HomePage] Component render');
+    console.log('Products status:', productsStatus);
+    console.log('Products count:', products.length);
+    console.log('Products error:', productsError);
 
     const handleCatalogClick = () => {
         catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -79,13 +104,30 @@ const HomePage = () => {
         if (!checkAuth()) return;
         dispatch(toggleFavorite(product.id)); 
     };
-useEffect(() => {
-  console.log("Current products status:", productsStatus);
-  if (productsStatus === 'idle') {
-    console.log("Dispatching fetchProducts...");
-    dispatch(fetchProducts());
-  }
-}, [dispatch]);
+    
+    useEffect(() => {
+      console.groupCollapsed('[HomePage] useEffect - Products loading');
+      console.log('Current productsStatus:', productsStatus);
+      
+      if (productsStatus === 'idle') {
+        console.log('Dispatching fetchProducts action');
+        dispatch(fetchProducts())
+          .then(action => {
+            if (fetchProducts.fulfilled.match(action)) {
+              console.log('fetchProducts fulfilled:', action.payload);
+            } else if (fetchProducts.rejected.match(action)) {
+              console.error('fetchProducts rejected:', action.error);
+            }
+          })
+          .catch(error => {
+            console.error('Error in dispatch:', error);
+          });
+      } else {
+        console.log('Products status is not idle, skipping dispatch');
+      }
+      
+      console.groupEnd();
+    }, [dispatch, productsStatus]);
 
     return (
         <div className={styles.container}>
@@ -113,7 +155,6 @@ useEffect(() => {
                     <h2 className={styles.heroTitle}>Интернет-магазин чая</h2>
                     <div className={styles.heroText}>
                         <p>Добро пожаловать в Aroma, чайный магазин с самой большой коллекцией китайского чая в Европе.Мы осуществляем доставку китайского чая из Гамбурга, Германия, во все страны Европейского Союза. У нас вы можете заказать подарочный чайный набор в элегантной упаковке для своих близких.</p>
-
                     </div>
                     <button 
                         onClick={handleCatalogClick}
@@ -142,8 +183,29 @@ useEffect(() => {
 
             <section className={styles.catalogSection} ref={catalogRef}>
                 <h3 className={styles.sectionTitle}>Каталог</h3>
+                
+                {productsStatus === 'loading' && (
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.teaLoader}></div>
+                    <p>Загружаем чайную коллекцию...</p>
+                  </div>
+                )}
+                
+                {productsStatus === 'failed' && (
+                  <div className={styles.errorContainer}>
+                    <h2>Ошибка загрузки каталога</h2>
+                    <p>{productsError?.message || 'Неизвестная ошибка'}</p>
+                    <button 
+                      className={styles.retryButton}
+                      onClick={() => dispatch(fetchProducts())}
+                    >
+                      Попробовать снова
+                    </button>
+                  </div>
+                )}
+                
                 <div className={styles.productsGrid}>
-                    {products.map((product) => {
+                    {productsStatus === 'succeeded' && products.map((product) => {
                         const isFavorite = favorites.includes(product.id);
                         return (
                             <div key={product.id} className={styles.productCard}>
@@ -151,6 +213,11 @@ useEffect(() => {
                                     src={`/img/${product.image_url}`}
                                     alt={product.title}
                                     className={styles.productImage}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = '/img/placeholder.jpg';
+                                        console.warn(`Image load failed for: ${product.image_url}`);
+                                    }}
                                 />
                                 <div className={styles.productInfo}>
                                     <p className={styles.productTitle}>{product.title}</p>
