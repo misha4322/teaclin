@@ -103,8 +103,6 @@ const HomePage = () => {
     };
     
     useEffect(() => {
-      console.groupCollapsed('[HomePage] useEffect - Products loading');
-      console.log('Current productsStatus:', productsStatus);
       
       if (productsStatus === 'idle') {
         console.log('Dispatching fetchProducts action');
