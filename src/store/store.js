@@ -35,6 +35,23 @@ const store = configureStore({
     favorites: favoritesReducer,
     products: productsReducer,
   },
+  
+  // Добавляем middleware для корректной работы асинхронных операций
+  middleware: (getDefaultMiddleware) => 
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Игнорируем эти поля в действиях
+        ignoredActionPaths: ['payload.config', 'payload.request', 'error'],
+        // Игнорируем эти пути в состоянии
+        ignoredPaths: [
+          'cart.error',
+          'orders.error',
+          'favorites.error',
+          'products.error'
+        ],
+      },
+    }),
+    
   preloadedState
 });
 
