@@ -5,8 +5,7 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (_, { rejectWithValue, getState }) => {
     try {
-      console.groupCollapsed('[fetchProducts] Starting request');
-      console.log('Request URL: https://tea-server-production.up.railway.app/api/products');
+
       
       const startTime = Date.now();
       const response = await axios.get(
@@ -18,32 +17,19 @@ export const fetchProducts = createAsyncThunk(
       );
       
       const duration = Date.now() - startTime;
-      console.log(`Request completed in ${duration}ms`);
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      console.log('Response data:', response.data);
+
       
       if (!response.data || !Array.isArray(response.data)) {
         console.error('Invalid response format:', response.data);
         throw new Error('Invalid response format from server');
       }
       
-      console.log('Response contains', response.data.length, 'products');
-      console.groupEnd();
+
       
       return response.data;
     } catch (error) {
-      console.groupCollapsed('[fetchProducts] Error occurred');
-      console.error('Full error object:', error);
-      console.error('Error message:', error.message);
+
       
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-        console.error('Error response headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      }
       
       console.groupEnd();
       
