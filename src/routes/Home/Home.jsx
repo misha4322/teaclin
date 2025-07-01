@@ -80,6 +80,8 @@ const HomePage = () => {
         dispatch(toggleFavorite(product.id)); 
     };
     useEffect(() => {
+          console.log("Products in store:", products);
+          console.log("Products status:", status);
         if (productsStatus === 'idle') {
             dispatch(fetchProducts());
         }
