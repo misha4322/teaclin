@@ -3,25 +3,61 @@ import axios from 'axios';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
-      console.log("Fetching products from API...");
-      const response = await axios.get('https://tea-server-production.up.railway.app/api/products');
-      console.log("Products response:", response);
+      console.groupCollapsed('[fetchProducts] Starting request');
+      console.log('Request URL: https://tea-server-production.up.railway.app/api/products');
+      
+      const startTime = Date.now();
+      const response = await axios.get(
+        'https://tea-server-production.up.railway.app/api/products',
+        {
+          timeout: 10000,
+          validateStatus: (status) => status < 500
+        }
+      );
+      
+      const duration = Date.now() - startTime;
+      console.log(`Request completed in ${duration}ms`);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      console.log('Response data:', response.data);
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format from server');
+      }
+      
+      console.log('Response contains', response.data.length, 'products');
+      console.groupEnd();
+      
       return response.data;
     } catch (error) {
-      console.error("Products fetch error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config
-      });
+      console.groupCollapsed('[fetchProducts] Error occurred');
+      console.error('Full error object:', error);
+      console.error('Error message:', error.message);
+      
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        console.error('Error response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      }
+      
+      console.groupEnd();
       
       return rejectWithValue({
         message: 'Ошибка загрузки продуктов',
-        details: error.response?.data || error.message,
-        status: error.response?.status
+        details: {
+          errorMessage: error.message,
+          stack: error.stack,
+          responseData: error.response?.data,
+          responseStatus: error.response?.status
+        }
       });
+    } finally {
+      console.log('[fetchProducts] Request finished');
     }
   }
 );
@@ -32,21 +68,35 @@ const productsSlice = createSlice({
     items: [],
     status: 'idle',
     error: null,
+    lastFetch: null
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.pending, (state) => {
+        console.log('[productsSlice] Fetch products pending');
         state.status = 'loading';
         state.error = null;
+        state.lastFetch = new Date().toISOString();
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
+        console.log('[productsSlice] Fetch products fulfilled');
+        console.log('Payload received:', action.payload);
+        
         state.status = 'succeeded';
         state.items = action.payload;
+        state.error = null;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        console.error('[productsSlice] Fetch products rejected');
+        console.error('Error payload:', action.payload);
+        console.error('Error details:', action.error);
+        
         state.status = 'failed';
-        state.error = action.payload || 'Unknown error';
+        state.error = action.payload || {
+          message: 'Unknown error',
+          details: action.error
+        };
       });
   },
 });
