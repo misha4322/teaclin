@@ -3,9 +3,15 @@ import axios from 'axios';
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async () => {
-    const response = await axios.get('/api/products');
-    return response.data;
+  async (_, { rejectWithValue }) => { // Добавляем обработку ошибок
+    try {
+      const response = await axios.get(
+        'https://tea-server-production.up.railway.app/api/products'
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 
